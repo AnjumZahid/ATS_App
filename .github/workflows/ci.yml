@@ -1,0 +1,35 @@
+name: Streamlit App CI
+
+on: [push, pull_request]
+
+jobs:
+  test-app:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"  # Use the Python version your app requires
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Ensure you have a requirements.txt file
+
+    - name: Run Streamlit App
+      run: |
+        streamlit run app.py --server.headless true > streamlit_log.txt 2>&1 &  # Run in background
+        sleep 10  # Allow time for the app to start
+        cat streamlit_log.txt  # Show logs to verify it started correctly
+        pkill streamlit  # Stop after 10 seconds (since it's not accessible)
+
+    - name: Upload Streamlit Logs (for debugging)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: streamlit-logs
+        path: streamlit_log.txt
